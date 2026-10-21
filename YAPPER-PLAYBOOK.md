@@ -172,6 +172,7 @@ Stickers are written in the script, not added as an afterthought. Each one is ti
 | Price | The offer | Appears on the word where the price is spoken. |
 | Perk | Each offer element | One sticker per perk, on its word. |
 | Hook text | First 2-3 s | The big number or claim. Captions hide under it while it's up. |
+| Product card (`brand_card`) | When the product is named | Cut-out studio packshot on a brand-colour panel with thin accent border, logo, tracked serif title, rises in (`anim: rise`). Make the packshot with Nano Banana from the real product photo on pure white, then cut it out. Never a flat lifestyle photo with a text bar: it reads cheap. |
 | Fine print | Bottom of frame, last ~10 s or full length | Offer terms. |
 
 ### 5.6 Hard bans in dialogue
@@ -507,6 +508,7 @@ Max 2 attempts per take, max 8 regenerations per run (`--max-regens`). Rejected 
 | Omni adds a few words mid-take ("I just had to prove her wrong") | Model improv | Keep it if it reads naturally: add it to `edit_words` |
 | Long caption chunk runs off screen | One long word group | `cut.py` shrinks the caption font to fit |
 | Clipped word at a hyphen ("eye-roll", "pre-workout") | Whisper splits hyphenated words, alignment missed them | Fixed in `cut.py`: matching runs on hyphen-split sub-words |
+| Product sticker lands late | Whisper mishears brand names ("IM8" → "I am eight"), so the anchor word's time is estimated | Anchor brand-name stickers to the word before ("called") |
 | Sticker covers the face | Card placed in the upper third | Badges at `pos: top` (above the head); product cards at chest height with `hide_captions: true` |
 | Regenerating a chain's tail broke good takes | Downstream takes depend on the changed frame | Only rerun when the defect is load-bearing; back up first; re-anchor to actor |
 

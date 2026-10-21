@@ -249,6 +249,47 @@ def sticker_img(st, job_dir):
             card.paste(im, (0, 0)); card.paste(lab, ((w - lab.width) // 2, im.height))
             im = card
         return shadow(rounded(im, 28))
+    if kind == "brand_card":
+        # Premium product card: brand-colour panel, thin accent border, logo, cut-out product, serif title.
+        w = st.get("width", 600)
+        pad = 34
+        bg = st.get("bg", "#FAF6F2"); accent = st.get("accent", "#DBB15C"); fg = st.get("fg", "#50000B")
+        prod = Image.open(os.path.join(job_dir, st["image"])).convert("RGBA")
+        pw = int(w * st.get("product_scale", 0.72))
+        prod = prod.resize((pw, int(prod.height * pw / prod.width)), Image.LANCZOS)
+        logo = None
+        if st.get("logo"):
+            logo = Image.open(os.path.join(job_dir, st["logo"])).convert("RGBA")
+            lw = int(w * 0.30)
+            logo = logo.resize((lw, int(logo.height * lw / logo.width)), Image.LANCZOS)
+        title = st.get("title", "")
+        d = ImageDraw.Draw(Image.new("RGB", (1, 1)))
+        caps_ = title.upper()
+        track = lambda ft: sum(d.textlength(c, font=ft) for c in caps_) + ft.size * 0.28 * (len(caps_) - 1)
+        ts = st.get("title_size", 30)
+        while ts > 16 and track(font(st.get("font", "Didot.ttc"), ts)) > w - 2 * pad - 20:
+            ts -= 1
+        f = font(st.get("font", "Didot.ttc"), ts)
+        th = int(ts * 1.4) if title else 0
+        h = pad + (logo.height + 22 if logo else 0) + prod.height + (22 + 2 + 20 + th if title else 0) + pad
+        card = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+        dr = ImageDraw.Draw(card)
+        dr.rounded_rectangle([0, 0, w - 1, h - 1], 34, fill=bg, outline=accent, width=3)
+        y = pad
+        if logo:
+            card.alpha_composite(logo, ((w - logo.width) // 2, y)); y += logo.height + 22
+        sh_ = Image.new("RGBA", (pw, 60), (0, 0, 0, 0))   # soft contact shadow under the product
+        ImageDraw.Draw(sh_).ellipse([pw * 0.12, 18, pw * 0.88, 46], fill=(60, 0, 10, 70))
+        card.alpha_composite(sh_.filter(ImageFilter.GaussianBlur(10)), ((w - pw) // 2, y + prod.height - 36))
+        card.alpha_composite(prod, ((w - pw) // 2, y)); y += prod.height
+        if title:
+            y += 22
+            dr.line([(w * 0.38, y), (w * 0.62, y)], fill=accent, width=2); y += 22
+            x = (w - track(f)) / 2                     # tracked capitals, drawn letter by letter
+            for c in caps_:
+                dr.text((x, y), c, font=f, fill=fg)
+                x += dr.textlength(c, font=f) + f.size * 0.28
+        return shadow(card, blur=24, alpha=110)
     if kind == "fine_print":
         f = font("Switzer-Medium.otf", 26)
         txt = st["text"]
@@ -371,8 +412,8 @@ def main():
             print("sticker skipped:", err, flush=True); continue
         img = sticker_img(st, jd)
         y = H - img.height - 40 if st.get("pos") == "bottom" else st.get("y", POS.get(st.get("pos", "upper"), 360))
-        overlays.append((s, e, img, ((W - img.width) // 2, y), st.get("hide_captions", False)))
-    hook_windows = [(s, e) for s, e, _, _, hide in overlays if hide]
+        overlays.append((s, e, img, ((W - img.width) // 2, y), st.get("hide_captions", False), st.get("anim")))
+    hook_windows = [(s, e) for s, e, _, _, hide, _ in overlays if hide]
 
     chunks, cur = [], []
     for c in caps:                         # 1-3 words per caption, break on long gaps / punctuation
@@ -401,9 +442,15 @@ def main():
             for s, e, im in cap_list:
                 if s <= tsec < e:
                     frame.alpha_composite(im, ((W - im.width) // 2, 1330)); break
-        for s, e, im, xy, _ in overlays:
+        for s, e, im, xy, _, anim in overlays:
             if s <= tsec < e:
-                frame.alpha_composite(im, (max(0, xy[0]), xy[1]))
+                if anim == "rise":                   # ease up + fade in over 0.35 s, fade out over 0.25 s
+                    k_in = min(1.0, (tsec - s) / 0.35); k_in = 1 - (1 - k_in) ** 3
+                    k = min(k_in, min(1.0, (e - tsec) / 0.25))
+                    a_ = im.copy(); a_.putalpha(im.split()[3].point(lambda v, k=k: int(v * k)))
+                    frame.alpha_composite(a_, (max(0, xy[0]), xy[1] + int(60 * (1 - k_in))))
+                else:
+                    frame.alpha_composite(im, (max(0, xy[0]), xy[1]))
         enc.stdin.write(frame.tobytes()); n += 1
     enc.stdin.close(); enc.wait(); dec.wait()
     print(f"rendered {out} ({total:.1f}s, {n} frames)", flush=True)
