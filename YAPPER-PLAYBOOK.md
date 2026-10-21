@@ -2,7 +2,7 @@
 
 > **Living document.** This is the single source of truth for how we script, generate, cut and ship AI yapper ads. Every AI agent (Claude, Grok, OpenClaw, anything else) reads this before writing a yapper script. When we learn something, it goes in here, and the change goes in the [Changelog](#14-changelog).
 >
-> **Version:** 0.2 · **Last updated:** 2026-10-21 · **Owner:** Shabir Nudrat
+> **Version:** 0.3 · **Last updated:** 2026-10-21 · **Owner:** Shabir Nudrat
 > **Origin:** v0.1 is built from the @ladprofit "AI Yapper Playbook" breakdown (fictional £1 perfume subscription, 92 s, 34 cuts, $16 total), plus our own kie.ai Omni chaining work on whiteboard and VSL ads.
 
 ---
@@ -330,13 +330,15 @@ Static, locked-off shot, no camera movement. [SETTING PROMPT].
 [He/She] stays seated, mouth moving naturally, direct eye contact, the camera never moves.
 In this take: [TIMED BEATS].
 [He/She] says: "[THE TAKE'S WORDS, CUT MARKS REMOVED]"
-[ENERGY LINE].
+[He/She] speaks with [FIXED VOICE DESCRIPTION]. [ENERGY LINE].
 A very animated face: eyebrows up and down, glances to the window and back.
 Both hands gesture at chest height. [His/Her] hands never touch [his/her] face.
 One take, no jump cuts. No captions or on-screen text.
 ```
 
 - Strip `/` cut marks before sending the words.
+- Keep one fixed voice description in every take (age, accent, pitch, texture). It holds the voice steady across takes.
+- `pipeline/takes.py` builds this prompt from `job.yaml` and prefixes "Use the attached image as the exact opening frame".
 - Silent takes: replace the `says:` line with "[He/She] does not speak in this take." and keep everything else.
 - Keep "No captions or on-screen text." always. One take in the original burned its own line in as a caption.
 
@@ -449,6 +451,7 @@ Run on every ad before it ships. The pipeline automates what it can; a human che
 
 - Original ad: **$16** for a 92 s ad, all in, including every rejected attempt (Omni on kie at 1080p, actor images, test voices).
 - Our Omni runs: ~105-250 kie credits per 8 s clip.
+- IM8 driveway-dad pilot (2026-10-21): 18 × 8 s takes, 1080p, zero failures, ~3,700 kie credits all in. All 18 said their line; 2 needed an `edit_words` fix. Wall-clock ~45 min with 5 chains in parallel.
 - Rough cut: ~2 min once takes exist.
 
 ### 13.3 Known failures (add to this list every time)
@@ -464,6 +467,10 @@ Run on every ad before it ships. The pipeline automates what it can; a human che
 | Filler at end of take | Too few words for the duration | 3 words/s, cut filler in edit |
 | Word silently dropped or garbled | Omni safety filter on **rendered text** (e.g. "blood") | Keep risky words in speech only; never ask for them as on-screen text |
 | "Internal Error" | Transient | Retry same prompt up to 3x |
+| Omni reorders or garbles a phrase (e.g. "the next night, etrial night") | Model drift inside a take | Don't regenerate a chained take for this: set `edit_words` on the take to what was actually said that you keep; the cutter drops the rest |
+| Omni adds a few words mid-take ("I just had to prove her wrong") | Model improv | Keep it if it reads naturally: add it to `edit_words` |
+| Long caption chunk runs off screen | One long word group | `cut.py` shrinks the caption font to fit |
+| Sticker covers the face | Card placed in the upper third | Badges at `pos: top` (above the head); product cards at chest height with `hide_captions: true` |
 | Regenerating a chain's tail broke good takes | Downstream takes depend on the changed frame | Only rerun when the defect is load-bearing; back up first; re-anchor to actor |
 
 ---
@@ -473,6 +480,7 @@ Run on every ad before it ships. The pipeline automates what it can; a human che
 | Version | Date | Change |
 |---|---|---|
 | 0.1 | 2026-10-21 | First version. Built from the @ladprofit AI Yapper Playbook + our kie.ai Omni chaining learnings. Archetypes, skeletons, director sheet, job file spec added. |
+| 0.3 | 2026-10-21 | First full pilot (18 takes). Added `pipeline/` (kie.py, takes.py, cut.py), a fixed voice line in the locked prompt, `edit_words`, cutdowns in `edit.yaml`, new known failures. |
 | 0.2 | 2026-10-21 | Removed the compliance section and AI-disclosure fine print rules. Experimentation use. |
 
 ---
