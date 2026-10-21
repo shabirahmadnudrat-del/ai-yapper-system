@@ -2,7 +2,7 @@
 
 > **Living document.** This is the single source of truth for how we script, generate, cut and ship AI yapper ads. Every AI agent (Claude, Grok, OpenClaw, anything else) reads this before writing a yapper script. When we learn something, it goes in here, and the change goes in the [Changelog](#14-changelog).
 >
-> **Version:** 0.4 · **Last updated:** 2026-10-21 · **Owner:** Shabir Nudrat
+> **Version:** 0.5 · **Last updated:** 2026-10-21 · **Owner:** Shabir Nudrat
 > **Origin:** v0.1 is built from the @ladprofit "AI Yapper Playbook" breakdown (fictional £1 perfume subscription, 92 s, 34 cuts, $16 total), plus our own kie.ai Omni chaining work on whiteboard and VSL ads.
 
 ---
@@ -16,7 +16,7 @@
 5. [Script writing rules](#5-script-writing-rules)
 6. [The director sheet](#6-the-director-sheet)
 7. [The job file (machine contract)](#7-the-job-file-machine-contract)
-8. [The actor](#8-the-actor)
+8. [The actor](#8-the-actor) · [8.4 The angle pack](#84-the-angle-pack)
 9. [The takes: locked prompt + chaining](#9-the-takes-locked-prompt--chaining)
 10. [Edit](#10-edit)
 11. [Sound](#11-sound)
@@ -38,12 +38,12 @@ An **AI yapper** is the same thing with an AI-generated actor, generated in chai
 
 | Trait | Rule |
 |---|---|
-| Camera | Phone selfie framing. Locked off. Never moves, never zooms. |
+| Camera | Phone selfie framing. Locked off **within every shot**: never moves, never zooms. **Between shots the phone gets re-propped**: 4-6 camera angles per ad, same session, same outfit (§8.4). |
 | Talent | One person, talking to the lens. |
 | Setting | A real-life place: parked car, kitchen, bathroom mirror, bedroom, walk-in closet, office desk, clinic break room. |
 | Pace | Fast. ~3 words per second. Jump cut every 2-3 s. |
 | Visual selling | Stickers (review cards, comment replies, price, perks) do the selling on mute. No B-roll over the voice. |
-| Length | 45-90 s for the main cut. 15-30 s cutdowns from the same takes. |
+| Length | 45-90 s for the main cut. Story yappers run 2-4 min (the angle reference in §8.4 is 3:42 and holds). 15-30 s cutdowns from the same takes. |
 
 **What changes between yappers:** who is talking (archetype), why they are talking (the trigger), where they are, and the product.
 
@@ -97,6 +97,8 @@ Timings assume a ~90 s ad. Scale proportionally for 45-60 s: keep the order, com
 | 48-72 s | 53-80% | **"This is exactly why X exists" + offer** | The offer lands here (~58%). One sticker per perk. |
 | 72-90 s | 80-100% | **Honesty + anchor close** | "For full transparency, I work here. And I'm still on it." Anchor close, two-word imperatives, sign-off. Terms on screen. |
 
+**Angles per beat (§8.4):** status + reason → `base` then `close` on the first punch line · proof → a `low` quote shot if the proof is someone else's words · product talk → `base` with one `aside` · objection → the comment is read in `close` or `low`, "business mode" snaps back to `base` · offer → `wide` for the money line, `close` for the reveal · close → `base`, with `close` on the final imperative.
+
 ### 4.2 Archetype variations
 
 Only the beats that change are listed. Everything else follows the master skeleton.
@@ -149,6 +151,7 @@ These are the rules an agent must follow when writing the words.
 - **~3 words per second** at fast gossip energy (Omni's measured rate).
 - **8 s take = 20-24 words. 10 s take = 25-30 words.** Never go over: the model rushes or truncates. Never go much under: the model pads with filler ("and honestly, that is it").
 - A 90 s ad ≈ 9-11 takes ≈ 260-300 words.
+- Benchmark: a real story yapper that holds for 3:42 runs **2.5 words/s** (557 words). Fast is good, but the pace comes from the cuts and angle changes, not from cramming words. 2.5-3 w/s is the range.
 
 ### 5.3 Cut marks
 
@@ -200,10 +203,10 @@ The first version of the original ad used 26 one-line takes. Every one restarted
 **Core fear:** [the #1 fear this ad kills]
 **Anchor:** [the bigger decision we compare the price to]
 
-| Take | Dur | Words (/ = cut) | Timed beats | Props in hand | Starts on | Stickers |
-|---|---|---|---|---|---|---|
-| t1 | 10 s | Okay, so my last video kind of blew up, / and every comment is asking the same thing. / Is the one pound thing actually real? / Yes. Let me explain. | 0-3 s leans in, palms up · 3-6 s glances down at the comments · 6-10 s finger up, firm nod | none | actor | Hook text "£1?? 🤨" on t1 0-3 s |
-| t2 | 10 s | First month is one pound. / You get a travel spray of whatever just landed. / … | 0-3 s finger up · 3-6 s lifts the spray from her lap · 6-10 s counts on fingers | spray (from 3 s) | t1 last frame | Price "£1 first month" on "one pound" |
+| Take | Dur | Angle | Words (/ = cut) | Timed beats | Props in hand | Starts on | Stickers |
+|---|---|---|---|---|---|---|---|
+| t1 | 10 s | base | Okay, so my last video kind of blew up, / and every comment is asking the same thing. / Is the one pound thing actually real? / Yes. Let me explain. | 0-3 s leans in, palms up · 3-6 s glances down at the comments · 6-10 s finger up, firm nod | none | angle | Hook text "£1?? 🤨" on t1 0-3 s |
+| t2 | 10 s | close | First month is one pound. / You get a travel spray of whatever just landed. / … | 0-3 s finger up · 3-6 s lifts the spray from her lap · 6-10 s counts on fingers | spray (from 3 s) | angle | Price "£1 first month" on "one pound" |
 ```
 
 ### 6.2 Column rules
@@ -213,7 +216,8 @@ The first version of the original ad used 26 one-line takes. Every one restarted
 - **Never name an object in a beat unless it's a real prop in `props`.** Omni turns mimes into real objects: "cups hands like holding a book" put a book in his hands for two takes; "mimes scrolling a phone" will produce a phone. Describe only hand shapes and body: "both palms up close together, eyes drooping". `qc.py lint --fix` rewrites offending beats.
 - **No hand-to-face gestures** ("rubs eyes"). They melt faces.
 - **Props in hand:** track every prop. If she lifts the spray in t2, it's still in her hand at the start of t3, or t3 has a beat where she puts it down.
-- **Starts on:** `actor` (the approved actor image) or `tN last frame`. Re-anchor to `actor` every 3-4 takes so the face can't drift.
+- **Angle:** which angle from the actor's angle pack (§8.4). Change angle at every narrative turn. Never the same non-`base` angle twice in a row.
+- **Starts on:** `angle` (the approved image for this take's angle) or `tN last frame` (only when tN used the **same** angle). An angle change is always a fresh start, which is also a re-anchor. Re-anchor at least every 3-4 takes so the face can't drift.
 - **Stickers:** which sticker, on which word.
 
 ### 6.3 Silent action beats
@@ -250,10 +254,17 @@ actor:
   source_frame: library/actors/ACT-007/source.jpg     # the real phone frame
   approved_image: library/actors/ACT-007/approved.png
   description: "Brazilian woman, late 20s, messy bun, gold hoops, wired white earphones"
+  angles:                       # §8.4. A path, or {image, framing}. Missing base = approved_image
+    base:  library/actors/ACT-007/approved.png
+    close: {image: library/actors/ACT-007/angle-close.png, framing: "The phone is held close, her face fills the frame"}
+    low:   {image: library/actors/ACT-007/angle-low.png, framing: "The phone sits low on the steering wheel, looking slightly up at her"}
+    aside: {image: library/actors/ACT-007/angle-aside.png, framing: "She is turned slightly away from the phone"}
+    wide:  {image: library/actors/ACT-007/angle-wide.png, framing: "The phone is further back on the passenger seat, more of the car in frame"}
 
 setting:
   id: SET-car-lunch
-  prompt: "UGC iPhone selfie footage from the dashboard of a woman in the driver's seat of a parked car on her lunch break, wired white earphones in, daylight through the side window"
+  prompt: "UGC iPhone selfie footage of a woman in the driver's seat of a parked car on her lunch break, wired white earphones in, daylight through the side window"
+  # With angles, keep the setting prompt about the place only. Camera position goes in each angle's `framing`.
 
 energy: "SUPER high energy, fast breathless gossip delivery, rising intonation, little laughs between phrases"
 
@@ -265,9 +276,10 @@ takes:
       - [0, 3, "leans in, palms up"]
       - [3, 6, "glances down at the comments"]
       - [6, 10, "finger up, firm nod"]
+    angle: base                 # key from actor.angles
     props_start: []
     props_end: []
-    starts_on: actor            # actor | t<N>_last
+    starts_on: angle            # angle (this take's angle image) | t<N>_last (same angle only) | actor (= angle: base)
     stickers:
       - {type: hook_text, text: "£1?? 🤨", start_word: "Okay", end_word: "thing."}
 
@@ -276,6 +288,7 @@ takes:
     silent: true
     beats:
       - [0, 4, "lifts the spray and spritzes her wrist, smells it, eyebrows up"]
+    angle: base
     props_start: [spray]
     props_end: [spray]
     starts_on: t1_last
@@ -285,8 +298,11 @@ fine_print: "£1 first month, then £14/mo. Cancel anytime."
 
 **Validation rules (pipeline enforces):**
 - Word count per take within §5.2 limits for its duration.
-- Every take that isn't `t1` starts on the previous take's last frame or on `actor`.
-- No more than 3 consecutive chained takes before a re-anchor to `actor`.
+- Every take that isn't `t1` starts on its angle image or on the previous take's last frame.
+- `starts_on: t<N>_last` is only valid when take N has the same `angle`.
+- No more than 3 consecutive chained takes before a fresh start from an angle image.
+- No non-`base` angle twice in a row. `base` carries 40-60% of the runtime.
+- Jobs without `angles` still run: every take is `base` (the old single-angle format).
 - `props_start` of take N equals `props_end` of take N-1.
 - No banned words (§5.6) in `words`.
 
@@ -318,7 +334,41 @@ She looks straight into the phone lens, lips slightly parted. Remove all the cap
 
 ### 8.3 Actor library
 
-Every approved actor gets a folder: `library/actors/ACT-NNN/` with `source.jpg` (the real frame), `approved.png`, `prompt.txt`, and `card.md` (description, which setting, which brands have used them, voice notes). Reuse actors across ads for the same brand so the audience sees a recurring "creator".
+Every approved actor gets a folder: `library/actors/ACT-NNN/` with `source.jpg` (the real frame), `approved.png`, `prompt.txt`, and `card.md` (description, which setting, which brands have used them, voice notes). Reuse actors across ads for the same brand so the audience sees a recurring "creator". Each actor folder also holds the angle pack (§8.4): `angle-<name>.png` + `angle-<name>.txt` (the prompt).
+
+### 8.4 The angle pack
+
+**Why:** a real creator films a story in one session but props the phone in several places: closer for the juicy bit, lower when they act out what someone said, off to the side for a sarcastic aside, further back for the embarrassing admission. One locked angle for 90 s+ reads as a generated clip. **Several angles, same outfit, same room, same light reads as a real person editing their own video**, and every angle change is a pattern interrupt that resets attention.
+
+**Reference:** a real 3:42 GLP-1 hair-loss story yapper (client ad, swipe kept privately). One woman, black tank, one evening, bedroom + kitchen. ~50 shots, median shot 4.3 s, 7 camera setups, never a dead stretch. How the angles are used:
+
+| Angle | Framing | What she does in it | Example lines |
+|---|---|---|---|
+| `base` | Eye level, phone at arm's length, head to mid-torso, bed behind | Narration, facts, mechanism. Carries most of the runtime. | "She explained it to me like I'm five." |
+| `close` | Phone pulled in, face fills the frame, forehead cropped | Emotional peaks, reveals, the product name, the big number | "…and told me about [product]." · "was their clinical trial." · "You have a whole halo of new baby hairs" |
+| `low` | Phone lower and slightly tilted, looking up at her | **Quoting someone else.** Every quote of another person gets this angle. | "Wait, where did half of your hair go?" · "WHAT?" · "Wait… what did you do?" |
+| `aside` | Body turned ~30°, eyes off lens, lamps in frame | Sarcasm, admissions, eye-rolls | "I am down 34 pounds…" · "The scale is doing exactly what it's supposed to do." |
+| `wide` | Further back and higher, more room visible, smaller in frame | Resigned or self-deprecating beats, money lines | "$150 a month on vitamins that aren't doing anything" · "that 2 PM zombie crash" |
+| `spot2` | A different spot in the house (kitchen counter) | A change of scene halfway through. **The product boxes sit in the background ~50 s before the product is named.** | "I take biotin gummies every morning…" |
+| `demo` | Base framing, hands and product in shot | Product use while still talking to the lens, not B-roll | "Most greens drinks taste like lawn clippings, but this…" |
+
+**Angle grammar (rules for scripts):**
+1. **4-6 angles per ad** for 60 s+. 3 minimum for 45 s. `base` carries 40-60% of the runtime.
+2. **Change angle at every narrative turn:** a quote, a reveal, an aside, the product name, the price, the close.
+3. **A quote always gets its own angle** (`low` by default). The angle change does the "voice" so the actor doesn't have to.
+4. **Never the same non-`base` angle twice in a row.** Go back to `base` between specials.
+5. **Same-angle jump cuts still happen** between angle changes (cut marks `/`). An angle change roughly every 4-8 s, a cut every 2-3 s.
+6. **Continuity is sacred.** Outfit, hair, jewellery, earphones, light temperature are identical in every angle. Only the camera position (and in `spot2`, the background) changes. That's what makes it read as one session.
+7. **Plant the product in the background** of a `spot2` or `wide` angle before it's named. Don't mention it, don't sticker it.
+8. **Props don't survive an angle change.** A fresh angle image has empty hands, so keep a prop inside one angle's chain (pick it up, use it, put it down), or make a dedicated angle image with the prop in hand (`demo`).
+9. Hand-to-hair touches are fine in a real video. For AI, the §6.2 ban on hand-to-face gestures still holds.
+
+**Making the pack (AI):**
+- **Preferred: real frames per angle.** Pull one frame per angle from a real phone video that already has those angles (same creator, same room). Run the §8.2 person-change prompt on each frame, and attach the approved `base` image as "the target person: match her face, hair, outfit and jewellery exactly". Every angle then has real grain and real light, and §8.1 rule 5 holds (never edit on top of a generated image).
+- **Fallback: re-angle the approved image.** One Nano Banana Pro edit per angle from `approved.png`: "Same woman, same outfit, same room, same light. The phone has been moved: [angle description]. She looks into the lens, lips slightly parted. No text." Untested: check every angle for waxiness before you use it.
+- `spot2` needs a real frame of the second location (or a separate source frame) plus the target-person attachment.
+- **Approve the pack before any takes.** Put all angles side by side: same person, same outfit, same light temperature. The QC agent's identity check runs against `base`.
+- Every angle image follows the §8.1 rules: looking into the lens, lips parted, no quality words, no caption text.
 
 ---
 
@@ -341,15 +391,17 @@ One take, no jump cuts. No captions or on-screen text.
 
 - Strip `/` cut marks before sending the words.
 - Keep one fixed voice description in every take (age, accent, pitch, texture). It holds the voice steady across takes.
-- `pipeline/takes.py` builds this prompt from `job.yaml` and prefixes "Use the attached image as the exact opening frame".
+- `pipeline/takes.py` builds this prompt from `job.yaml` and prefixes "Use the attached image as the exact opening frame". The angle's `framing` line is appended to `[SETTING PROMPT]`; everything else stays locked across angles, so the voice and energy hold.
 - Silent takes: replace the `says:` line with "[He/She] does not speak in this take." and keep everything else.
 - Keep "No captions or on-screen text." always. One take in the original burned its own line in as a caption.
 
 ### 9.2 Chaining
 
-- **Each take starts on the frame where the last one ended.** No pose reset between cuts.
+- **Same angle: each take starts on the frame where the last one ended.** No pose reset between cuts.
 - Harvest the last frame of take N → upload → pass as the start image for take N+1.
-- **Re-anchor to the approved actor image every 3-4 takes** so the face can't drift.
+- **Angle change: start from that angle's approved image.** The cut to a new angle hides the pose reset, and it re-anchors the face for free. More angles = less drift.
+- **Re-anchor to an angle image at least every 3-4 takes** so the face can't drift.
+- **Coverage on hero takes (optional):** for the 2-3 most important takes (hook, reveal, a quote), generate the same line in two angles and cut between them mid-line at a `/`. Real editors do exactly this. It doubles the cost of those takes only.
 - Generate in order. If you regenerate take N, every chained take after it is invalid until you check the join (or re-anchor at N+1).
 - Back up any approved take before regenerating anything downstream.
 
@@ -372,7 +424,8 @@ One take, no jump cuts. No captions or on-screen text.
 
 ### 10.1 Picture rules
 
-- **The camera stays still.** No zoom-ins between cuts, no fake handheld shake.
+- **The camera stays still within a shot.** No zoom-ins, no fake handheld shake. Angle changes happen only on a cut (§8.4).
+- No digital punch-ins as a substitute for angles. If you need more variety, add an angle to the pack.
 - **Lip sync at all times.** No B-roll over the voice. Product actions are silent beats between lines.
 - **Stickers do the selling on mute.** Review card, comment reply, price, each perk, each on its word.
 - **Captions in the lower third.** Never over the face. Hide under hook text while it's up.
@@ -383,6 +436,8 @@ One take, no jump cuts. No captions or on-screen text.
 - **The cuts stay human.** Automated cutting at pauses felt off at the joins in the original build. A human cuts on a blink or a gesture, a few frames before the next word.
 - **Workflow:** pipeline lays out the rough cut using word timestamps (Whisper) at each `/` mark, with full handles (±0.5 s) → exports an editable timeline (FCPXML / Premiere XML / CapCut-friendly) → human trims → pipeline renders the final from the trimmed cut.
 - Never let a cut land inside a word.
+- **Angle-change cuts don't need pose matching.** A new angle reads as intentional, so cut at the word boundary. The matched-cut search (§12b) and the 0.45 s merge rule are for same-angle cuts only. That means a cut can land at any `/` where the angle changes, even with no pause.
+- Audio must not jump at an angle change: same clean-up, same level, same room tone across every angle (§11).
 
 ### 10.3 Deliverables per ad
 
@@ -416,6 +471,7 @@ Run on every ad before it ships. The pipeline automates what it can; a human che
 - [ ] Core fear named and killed by the first proof
 - [ ] Price lands at 50-60% (40-50% for `skeptic`/`reactor`)
 - [ ] One personality beat per take
+- [ ] Angle on every take; 4-6 angles for 60 s+; angle changes at each quote, reveal, aside, product name and price; no non-`base` angle twice in a row
 - [ ] Words per take within §5.2
 - [ ] No banned words (§5.6)
 - [ ] Claims match the brand's approved claims
@@ -427,6 +483,7 @@ Run on every ad before it ships. The pipeline automates what it can; a human che
 - [ ] Earphones, outfit, hair, jewellery and light identical in every shot, silent beats included
 - [ ] No captions or text burned into the video
 - [ ] Face consistent across all takes
+- [ ] Angle pack approved side by side before takes: same person, outfit, jewellery and light temperature in every angle
 
 **Edit + sound**
 - [ ] No cut lands inside a word
@@ -466,7 +523,7 @@ Max 2 attempts per take, max 8 regenerations per run (`--max-regens`). Rejected 
 
 **5. Final review.** Gemini watches the finished ad and lists jarring moments (teleporting cuts, audio jumps, captions over the face, wrong caption words) mapped back to takes. Anything still open goes in `qc/QC-REPORT.md` for a human.
 
-**Cut density trade-off (pilot finding):** Omni talks almost without pauses, so with the 0.45 s merge rule a take usually ends up with **no internal cuts**: the IM8 pilot went from 66 segments (v1, glitchy) to 18 (one per take, a cut every ~7 s). That fixes the teleporting hands but loses the 2-3 s jump-cut rhythm. To get both, write the pauses in: put a real beat in the timed beats at each `/` ("stops, exhales, small head shake") so there is a gap worth cutting. Lower `MERGE_GAP` in `cut.py` for more cuts.
+**Cut density trade-off (pilot finding):** Omni talks almost without pauses, so with the 0.45 s merge rule a take usually ends up with **no internal cuts**: the IM8 pilot went from 66 segments (v1, glitchy) to 18 (one per take, a cut every ~7 s). That fixes the teleporting hands but loses the 2-3 s jump-cut rhythm. To get both, write the pauses in: put a real beat in the timed beats at each `/` ("stops, exhales, small head shake") so there is a gap worth cutting. Lower `MERGE_GAP` in `cut.py` for more cuts. **The better fix (v0.5): angles (§8.4).** A cut to a new angle needs no pause and no pose match, so alternating angles brings the rhythm back without the teleporting hands.
 
 **Calibration notes:** Gemini scores a take 3/5 on voice even against its own audio, so treat voice/identity scores as outlier detectors (≤ 2), not truth. Prop and glitch detection is reliable: it caught the book in both takes with correct timestamps.
 
@@ -510,6 +567,7 @@ Max 2 attempts per take, max 8 regenerations per run (`--max-regens`). Rejected 
 | Clipped word at a hyphen ("eye-roll", "pre-workout") | Whisper splits hyphenated words, alignment missed them | Fixed in `cut.py`: matching runs on hyphen-split sub-words |
 | Product sticker lands late | Whisper mishears brand names ("IM8" → "I am eight"), so the anchor word's time is estimated | Anchor brand-name stickers to the word before ("called") |
 | Sticker covers the face | Card placed in the upper third | Badges at `pos: top` (above the head); product cards at chest height with `hide_captions: true` |
+| One angle for the whole ad reads as AI | No variety in camera position; every cut shows the same frame | Angle pack, 4-6 angles, change at every narrative turn (§8.4) |
 | Regenerating a chain's tail broke good takes | Downstream takes depend on the changed frame | Only rerun when the defect is load-bearing; back up first; re-anchor to actor |
 
 ---
@@ -518,10 +576,11 @@ Max 2 attempts per take, max 8 regenerations per run (`--max-regens`). Rejected 
 
 | Version | Date | Change |
 |---|---|---|
-| 0.1 | 2026-10-21 | First version. Built from the @ladprofit AI Yapper Playbook + our kie.ai Omni chaining learnings. Archetypes, skeletons, director sheet, job file spec added. |
+| 0.5 | 2026-10-21 | Multi-angle yappers: §8.4 angle pack + angle grammar from a real 3:42 story yapper (7 setups, ~50 shots). `angle` column in the director sheet, `actor.angles` + per-take `angle` in job.yaml, chaining only within an angle, angle-change cuts skip pose matching, 2.5-3 w/s benchmark, story yappers can run 2-4 min. |
 | 0.4 | 2026-10-21 | QC agent (`qc.py`): lint, Gemini take review, auto-regenerate, matched cuts, final review. Rule: never name objects in beats. |
 | 0.3 | 2026-10-21 | First full pilot (18 takes). Added `pipeline/` (kie.py, takes.py, cut.py), a fixed voice line in the locked prompt, `edit_words`, cutdowns in `edit.yaml`, new known failures. |
 | 0.2 | 2026-10-21 | Removed the compliance section and AI-disclosure fine print rules. Experimentation use. |
+| 0.1 | 2026-10-21 | First version. Built from the @ladprofit AI Yapper Playbook + our kie.ai Omni chaining learnings. Archetypes, skeletons, director sheet, job file spec added. |
 
 ---
 
@@ -540,35 +599,36 @@ Core fear: [the #1 fear this ad kills]
 Approved claims / VoC: [paste or link]
 Length target: [s]
 Take duration: [8 | 10]
+Angle pack: [actor ID + which angles exist, e.g. base, close, low, aside, wide]
 
 Output, in this order:
 1. A one-paragraph concept: who, where, why they're talking, the anchor.
 2. The six moves (§2): quote the line that delivers each.
-3. The director sheet (§6) as a markdown table.
+3. The director sheet (§6) as a markdown table, with an angle on every take (§8.4).
 4. The job file (§7) as YAML, identical content.
 5. Self-QA: the "Script" section of the §12 checklist, ticked or flagged.
 ```
 
-**What good output looks like:** every take is within word limits, every `/` sits at a natural breath, every take has 3 timed beats with one personality beat, props and starts_on are tracked, stickers are tied to words, and the fine print carries the offer terms.
+**What good output looks like:** every take is within word limits, angles change at every quote, reveal, aside, product name and price, every `/` sits at a natural breath, every take has 3 timed beats with one personality beat, props and starts_on are tracked, stickers are tied to words, and the fine print carries the offer terms.
 
 ---
 
 ## Appendix B: Full worked example
 
-Illustrative rebuild of the original ad's structure (fictional brand `velvet-vial`, `insider`, £1 perfume subscription). Not the original transcript. Use it as the reference for tone, density and how the columns are filled.
+Illustrative rebuild of the original ad's structure (fictional brand `velvet-vial`, `insider`, £1 perfume subscription). Not the original transcript. Use it as the reference for tone, density and how the columns are filled. Angles (v0.5): `low` for the two lines read out from other people (the review, the comment), `aside` for the date joke, `wide` for the price, `base` for the rest. The spray stays in `base` (t4s→t5 chained) because a fresh angle image has empty hands.
 
 **Concept:** A brand employee films herself in her parked car on her lunch break, wired earphones in, laptop on her lap. Her last video blew up and everyone asked if the £1 first month is real. She answers, gets distracted gushing about two scents, switches to business mode for the cancel objection, lays out the offer, and closes with "I work here and I'm still on it".
 
-| Take | Dur | Words (/ = cut) | Timed beats | Props | Starts on | Stickers |
-|---|---|---|---|---|---|---|
-| t1 | 10 s | Okay, so my last video kind of blew up, / and every comment is asking the same thing. / Is the one pound thing actually real? / Yes. Let me explain. | 0-3 leans in, palms up · 3-6 glances down at comments · 6-10 finger up, firm nod | — | actor | Hook "£1 perfume?? 🤨" |
-| t2 | 10 s | But first, / someone left this review and I actually screamed. / She's been with us a full year, / cancelled to save money, / and is now begging to come back. | 0-3 hand on chest · 3-6 points down at the review · 6-10 mock-sobs, laughs | — | t1 last | Review card ★★★★★ on "this review" |
-| t3 | 10 s | Okay so if you love that warm vanilla thing / from the expensive brand, / our Velvet one is that, / but somehow better. / I wore it to a date. / He asked. | 0-3 eyes closed, sniffs the air · 3-6 counts off on fingers · 6-10 seat shimmy, side-eye | — | t2 last | — |
-| t4s | 4 s | (silent) | 0-4 lifts the travel spray from her lap, spritzes wrist, smells it, eyebrows up | spray | t3 last | — |
-| t5 | 10 s | And the fresh one? / Clean laundry, / but like, / rich clean laundry. / I'm obsessed. / My desk neighbour thinks I'm unwell. | 0-3 holds spray up · 3-6 waves hand, laughs · 6-10 whispers to camera | spray | actor (re-anchor) | — |
-| t6 | 10 s | Anyway. / Someone said "I bet you can't cancel." / Okay. Business mode. / You cancel in two taps. / In the app. / No phone call, no email. | 0-3 puts spray down · 3-6 reads comment, raises eyebrow · 6-10 finger counts, serious face | — (put down at 0-2 s) | t5 last | Comment bubble "@lou.k I bet you can't cancel" |
-| t7 | 10 s | Here's how it works. / You pick your scent every month, / or skip a month, / whatever. / And if you hate one, / you swap it. / Done. | 0-3 palms out · 3-6 counts on fingers · 6-10 shrug, smile | — | t6 last | — |
-| t8 | 10 s | This is exactly why we did the one pound thing. / First month is one pound. / You get a travel spray / of whatever just landed. / Then it's fourteen a month. | 0-3 points at camera · 3-6 holds up one finger · 6-10 small happy bounce | — | t7 last | Price "£1 first month" · Perk "Travel spray" |
-| t9 | 10 s | For full transparency, / I work here. / And I'm still on it. / Not an eighty pound bottle you're not sure about. / One pound. / Go. Try it. / Love ya, bye. | 0-3 hand up, honest face · 3-6 shakes head, smirks · 6-10 waves, reaches to stop recording | — | actor (re-anchor) | Fine print |
+| Take | Dur | Angle | Words (/ = cut) | Timed beats | Props | Starts on | Stickers |
+|---|---|---|---|---|---|---|---|
+| t1 | 10 s | base | Okay, so my last video kind of blew up, / and every comment is asking the same thing. / Is the one pound thing actually real? / Yes. Let me explain. | 0-3 leans in, palms up · 3-6 glances down at comments · 6-10 finger up, firm nod | — | angle | Hook "£1 perfume?? 🤨" |
+| t2 | 10 s | low | But first, / someone left this review and I actually screamed. / She's been with us a full year, / cancelled to save money, / and is now begging to come back. | 0-3 hand on chest · 3-6 points down at the review · 6-10 mock-sobs, laughs | — | angle | Review card ★★★★★ on "this review" |
+| t3 | 10 s | aside | Okay so if you love that warm vanilla thing / from the expensive brand, / our Velvet one is that, / but somehow better. / I wore it to a date. / He asked. | 0-3 eyes closed, sniffs the air · 3-6 counts off on fingers · 6-10 seat shimmy, side-eye | — | angle | — |
+| t4s | 4 s | base | (silent) | 0-4 lifts the travel spray from her lap, spritzes wrist, smells it, eyebrows up | spray | angle | — |
+| t5 | 10 s | base | And the fresh one? / Clean laundry, / but like, / rich clean laundry. / I'm obsessed. / My desk neighbour thinks I'm unwell. | 0-3 holds spray up · 3-6 waves hand, laughs · 6-10 whispers to camera | spray | t4s last | — |
+| t6 | 10 s | low | Anyway. / Someone said "I bet you can't cancel." / Okay. Business mode. / You cancel in two taps. / In the app. / No phone call, no email. | 0-3 hands empty, settles back · 3-6 reads comment, raises eyebrow · 6-10 finger counts, serious face | — (new angle: spray already down) | angle | Comment bubble "@lou.k I bet you can't cancel" |
+| t7 | 10 s | base | Here's how it works. / You pick your scent every month, / or skip a month, / whatever. / And if you hate one, / you swap it. / Done. | 0-3 palms out · 3-6 counts on fingers · 6-10 shrug, smile | — | angle | — |
+| t8 | 10 s | wide | This is exactly why we did the one pound thing. / First month is one pound. / You get a travel spray / of whatever just landed. / Then it's fourteen a month. | 0-3 points at camera · 3-6 holds up one finger · 6-10 small happy bounce | — | angle | Price "£1 first month" · Perk "Travel spray" |
+| t9 | 10 s | base | For full transparency, / I work here. / And I'm still on it. / Not an eighty pound bottle you're not sure about. / One pound. / Go. Try it. / Love ya, bye. | 0-3 hand up, honest face · 3-6 shakes head, smirks · 6-10 waves, reaches to stop recording | — | angle | Fine print |
 
 **Fine print:** `£1 first month, then £14/mo. Cancel anytime in the app.`

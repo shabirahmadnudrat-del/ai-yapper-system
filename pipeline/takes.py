@@ -7,7 +7,7 @@
 
 Reads <job_dir>/job.yaml (playbook §7). Writes <job_dir>/takes/tN.mp4 + tN_last.png.
 Resumable: a take whose mp4 exists is skipped; delete it to regenerate.
-Chains that start on the actor image run in parallel; takes inside a chain run in order.
+Chains that start fresh (on an angle image, playbook §8.4) run in parallel; takes inside a chain run in order.
 """
 import argparse, os, re, sys, concurrent.futures as cf
 import yaml
@@ -28,14 +28,47 @@ LOCKED = (
 )
 
 
+def angle_of(take):
+    return take.get("angle", "base")
+
+
+def angle_entry(job, take):
+    """The take's angle from actor.angles: a path, or {image, framing}. No angles = everything is base."""
+    a = angle_of(take)
+    entry = (job["actor"].get("angles") or {}).get(a)
+    if entry is None:
+        if a != "base":
+            raise SystemExit(f"{take['id']}: angle '{a}' is not in actor.angles")
+        entry = job["actor"]["approved_image"]
+    return entry if isinstance(entry, dict) else {"image": entry}
+
+
+def angle_image(job, take):
+    return angle_entry(job, take)["image"]
+
+
+def fresh(take):
+    """Starts on its angle image rather than the previous take's last frame."""
+    return take["starts_on"] in ("actor", "angle")
+
+
 def prompt_for(job, take):
     beats = ", ".join(f"{a}-{b} s {d}" for a, b, d in take["beats"])
     if take.get("silent"):
         say = f"{job['pronoun']} does not speak in this take."
+    elif job.get("pause_at_cuts"):
+        # Real pauses at every cut mark give the editor a gap to cut in, so jump cuts don't make the body teleport.
+        words = re.sub(r"[,.]?\s*/\s*", "... ", take["words"]).strip()
+        say = (f'{job["pronoun"]} says: "{words}" {job["pronoun"]} stops talking for a clear one-second pause at every "...", '
+               f'mouth closed, like a creator thinking before the next line, then carries on')
     else:
         words = re.sub(r"\s*/\s*", " ", take["words"]).strip()
         say = f'{job["pronoun"]} says: "{words}"'
-    return LOCKED.format(setting=job["setting"]["prompt"].rstrip("."), P=job["pronoun"], Pos=job["possessive"],
+    setting = job["setting"]["prompt"].rstrip(".")
+    framing = angle_entry(job, take).get("framing")
+    if framing:
+        setting += ". " + framing.rstrip(".")
+    return LOCKED.format(setting=setting, P=job["pronoun"], Pos=job["possessive"],
                          pos=job["possessive"].lower(), beats=beats, say=say, voice=job["voice"],
                          energy=job["energy"].rstrip("."))
 
@@ -43,7 +76,7 @@ def prompt_for(job, take):
 def chains(takes):
     out, cur = [], []
     for t in takes:
-        if t["starts_on"] == "actor" and cur:
+        if fresh(t) and cur:
             out.append(cur); cur = []
         cur.append(t)
     if cur:
@@ -51,7 +84,7 @@ def chains(takes):
     return out
 
 
-def run_chain(job, chain, job_dir, only, actor_url, logfile):
+def run_chain(job, chain, job_dir, only, logfile):
     tdir = os.path.join(job_dir, "takes")
     prev_png = None
     for t in chain:
@@ -64,8 +97,8 @@ def run_chain(job, chain, job_dir, only, actor_url, logfile):
             kie.log(f"{t['id']}: exists, skip", logfile)
             prev_png = png
             continue
-        if t["starts_on"] == "actor":
-            start_url = actor_url
+        if fresh(t):
+            start_url = kie.upload(os.path.join(job_dir, angle_image(job, t)), f"yapper/{job['id']}")
         else:
             if not prev_png or not os.path.exists(prev_png):
                 kie.log(f"{t['id']}: needs {t['starts_on']} frame first, stopping chain", logfile)
@@ -103,10 +136,15 @@ def main():
     os.makedirs(os.path.join(a.job_dir, "takes"), exist_ok=True)
     logfile = os.path.join(a.job_dir, "takes", "takes.log")
     only = set(filter(None, a.only.split(",")))
-    actor_url = kie.upload(os.path.join(a.job_dir, job["actor"]["approved_image"]), f"yapper/{job['id']}")
+    by_id = {t["id"]: t for t in job["takes"]}
+    for t in job["takes"]:
+        angle_entry(job, t)
+        src = by_id.get(t["starts_on"].removesuffix("_last")) if not fresh(t) else None
+        if src and angle_of(src) != angle_of(t):
+            raise SystemExit(f"{t['id']}: chains from {src['id']} but changes angle; use starts_on: angle (playbook §8.4)")
     kie.log(f"credits before: {kie.credits()}", logfile)
     with cf.ThreadPoolExecutor(6) as ex:
-        list(ex.map(lambda c: run_chain(job, c, a.job_dir, only, actor_url, logfile), chains(job["takes"])))
+        list(ex.map(lambda c: run_chain(job, c, a.job_dir, only, logfile), chains(job["takes"])))
     kie.log(f"credits after: {kie.credits()}", logfile)
 
 

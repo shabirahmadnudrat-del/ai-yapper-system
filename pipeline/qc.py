@@ -20,7 +20,7 @@ JUDGE = os.environ.get("YAPPER_QC_MODEL", "gemini-3.1-pro-preview")
 FAST = os.environ.get("YAPPER_QC_FAST_MODEL", "gemini-3-flash-preview")
 
 # Nouns that make Omni materialise an object when they appear in a gesture beat.
-PROP_WORDS = r"\b(book|phone|glove|ball|cup|mug|coffee|bottle|spray|laptop|paper|pen|keys?|remote|scoop|sachet|powder|tub|glass|plate|bag|box|card|wallet|screen|notebook|tablet|can|drink)\b"
+PROP_WORDS = r"\b(book|phone|glove|ball|cup|mug|coffee|bottle|spray|laptop|paper|pen|keys?|remote|scoop|sachet|powder|tub|glass|plate|bag|box|card|wallet|screen|notebook|tablet|can|drink|container|food)\b"
 FACE_TOUCH = r"\b(rubs?|touch(es)?|scratch(es)?|cover(s)?|pinch(es)?)\b.*\b(eyes?|face|nose|forehead|chin|mouth|head|hair|temple)s?\b"
 
 
@@ -103,11 +103,14 @@ def lint(jd, fix=False):
     for t in job["takes"]:
         n = len(re.sub(r"/", " ", t.get("words", "")).split())
         lim = (18, 25) if t.get("duration_s", 8) == 8 else (24, 31)
+        if job.get("pause_at_cuts"):                 # each ~0.5 s pause costs about 1.5 words
+            k = t.get("words", "").count("/")
+            lim = (lim[0] - int(1.5 * k), lim[1] - int(1.5 * k))
         if not t.get("silent") and not (lim[0] <= n <= lim[1]):
             problems.append((t["id"], "words", f"{n} words (want {lim[0]}-{lim[1]})"))
         for i, (a, b, d) in enumerate(t["beats"]):
             for m in re.finditer(PROP_WORDS, d, re.I):
-                if m.group(1).lower() not in allowed:
+                if not any(m.group(1).lower() in p for p in allowed):
                     problems.append((t["id"], "prop_in_beat", f"beat {i}: '{d}' names '{m.group(1)}', Omni will put one in his hands"))
             if re.search(FACE_TOUCH, d, re.I):
                 problems.append((t["id"], "face_touch", f"beat {i}: '{d}' has a hand going to the face"))
@@ -247,11 +250,11 @@ def regenerate(jd, job, t, issues, attempt):
     if "prop" in cats or "face_touch" in cats or re.search(PROP_WORDS, " ".join(b[2] for b in t["beats"]), re.I):
         t2["beats"] = rewrite_beats(t)
     extra = [PATCH[c].format(P=job["possessive"], pos=job["possessive"].lower()) for c in cats if c in PATCH]
-    # A problem already in the opening frame was inherited from the chain: restart from the actor image.
-    from_actor = t["starts_on"] == "actor" or cats & {"identity", "outfit", "voice"} or any(float(i.get("start", 9)) < 0.5 for i in issues if i["category"] == "prop")
+    # A problem already in the opening frame was inherited from the chain: restart from the take's angle image.
+    from_actor = takesmod.fresh(t) or cats & {"identity", "outfit", "voice"} or any(float(i.get("start", 9)) < 0.5 for i in issues if i["category"] == "prop")
     prompt = takesmod.prompt_for(job, t2) + (" " + ". ".join(extra) + "." if extra else "")
     if from_actor:
-        start = kie.upload(os.path.join(jd, job["actor"]["approved_image"]), f"yapper/{job['id']}")
+        start = kie.upload(os.path.join(jd, takesmod.angle_image(job, t)), f"yapper/{job['id']}")
     else:
         prev = os.path.join(tdir, t["starts_on"] + ".png")
         start = kie.upload(prev, f"yapper/{job['id']}")

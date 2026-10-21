@@ -95,7 +95,7 @@ MERGE_GAP = 0.45     # a pause shorter than this is kept, not cut: tiny jump cut
 SEARCH = 0.30        # how far past the words a cut frame may move to find the best pose match
 
 
-def segments(take, toks, dur):
+def segments(take, toks, dur, merge_gap=None):
     """Phrases -> segments. Merges phrases split by a short pause, tags each token with its segment,
     and gives every segment the window its cut frames may move in (never into a word)."""
     phrases = []
@@ -104,7 +104,7 @@ def segments(take, toks, dur):
         phrases.append({"toks": ts, "ws": ts[0]["s"], "we": ts[-1]["e"]})
     segs = []
     for ph in phrases:
-        if segs and ph["ws"] - segs[-1]["we"] < MERGE_GAP:
+        if segs and ph["ws"] - segs[-1]["we"] < (MERGE_GAP if merge_gap is None else merge_gap):
             segs[-1]["toks"] += ph["toks"]; segs[-1]["we"] = ph["we"]
         else:
             segs.append(dict(ph))
@@ -152,6 +152,8 @@ def match_cuts(seq):
     """For each adjacent pair of segments pick the out-frame of A and in-frame of B whose poses match best."""
     step = 1.0 / FPS
     for A, B in zip(seq, seq[1:]):
+        if A.get("angle", "base") != B.get("angle", "base"):
+            continue  # a cut to a new angle reads as intentional: cut on the words, no pose match (playbook §8.4)
         best = (join_cost(frame_at(A["mp4"], A["out"]), frame_at(B["mp4"], B["in"])), A["out"], B["in"])
         o = A["out_range"][0]
         while o <= A["out_range"][1] + 1e-6:
@@ -347,9 +349,9 @@ def main():
             print(f"missing {t['id']}, skipped", flush=True); continue
         toks = align(t, words_json(mp4))
         gain = TAKE_LUFS - loudness(mp4)
-        segs = segments(t, toks, duration(mp4))
+        segs = segments(t, toks, duration(mp4), edit.get("merge_gap"))
         for si, sg in enumerate(segs):
-            sg.update(take=t["id"], mp4=mp4, si=si, gain=gain)
+            sg.update(take=t["id"], mp4=mp4, si=si, gain=gain, angle=t.get("angle", "base"))
         seq += segs
         print(f"{t['id']}: {len(segs)} segments", flush=True)
     match_cuts(seq)
