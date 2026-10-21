@@ -83,16 +83,79 @@ def align(take, hyp):
     return toks
 
 
+MERGE_GAP = 0.45     # a pause shorter than this is kept, not cut: tiny jump cuts read as glitches
+SEARCH = 0.30        # how far past the words a cut frame may move to find the best pose match
+
+
 def segments(take, toks, dur):
-    segs = []
+    """Phrases -> segments. Merges phrases split by a short pause, tags each token with its segment,
+    and gives every segment the window its cut frames may move in (never into a word)."""
+    phrases = []
     for pi in sorted({t["p"] for t in toks}):
         ts = [t for t in toks if t["p"] == pi]
-        segs.append([max(0.0, ts[0]["s"] - PRE), min(dur, ts[-1]["e"] + POST)])
-    for i in range(1, len(segs)):            # never overlap; split a tight gap down the middle
-        if segs[i][0] < segs[i - 1][1]:
-            mid = (segs[i][0] + segs[i - 1][1]) / 2
-            segs[i - 1][1] = segs[i][0] = mid
+        phrases.append({"toks": ts, "ws": ts[0]["s"], "we": ts[-1]["e"]})
+    segs = []
+    for ph in phrases:
+        if segs and ph["ws"] - segs[-1]["we"] < MERGE_GAP:
+            segs[-1]["toks"] += ph["toks"]; segs[-1]["we"] = ph["we"]
+        else:
+            segs.append(dict(ph))
+    for i, sg in enumerate(segs):
+        prev_we = segs[i - 1]["we"] if i else 0.0
+        next_ws = segs[i + 1]["ws"] if i + 1 < len(segs) else dur
+        sg["in_range"] = (max(prev_we + 0.02, sg["ws"] - SEARCH, 0.0), max(0.0, sg["ws"] - 0.04))
+        sg["out_range"] = (min(sg["we"] + 0.03, dur), min(sg["we"] + SEARCH, next_ws - 0.02, dur))
+        sg["in"] = min(max(sg["ws"] - PRE, sg["in_range"][0]), sg["in_range"][1])
+        sg["out"] = max(min(sg["we"] + POST, sg["out_range"][1]), sg["out_range"][0])
+        for t in sg["toks"]:
+            t["seg"] = i
     return segs
+
+
+_frames = {}
+
+
+def small_frames(mp4):
+    """All frames of a take, grey 90x160, for pose matching at cut points."""
+    if mp4 not in _frames:
+        import cv2
+        cap, fr = cv2.VideoCapture(mp4), []
+        while True:
+            ok, f = cap.read()
+            if not ok:
+                break
+            g = cv2.GaussianBlur(cv2.cvtColor(cv2.resize(f, (90, 160)), cv2.COLOR_BGR2GRAY), (5, 5), 0)
+            fr.append(g.astype(np.float32))
+        _frames[mp4] = fr
+    return _frames[mp4]
+
+
+def frame_at(mp4, t):
+    fr = small_frames(mp4)
+    return fr[min(len(fr) - 1, max(0, int(round(t * FPS))))]
+
+
+def join_cost(a, b):
+    """Whole-frame difference plus extra weight on the hands/torso band."""
+    return float(np.mean(np.abs(a - b)) + np.mean(np.abs(a[70:] - b[70:])))
+
+
+def match_cuts(seq):
+    """For each adjacent pair of segments pick the out-frame of A and in-frame of B whose poses match best."""
+    step = 1.0 / FPS
+    for A, B in zip(seq, seq[1:]):
+        best = (join_cost(frame_at(A["mp4"], A["out"]), frame_at(B["mp4"], B["in"])), A["out"], B["in"])
+        o = A["out_range"][0]
+        while o <= A["out_range"][1] + 1e-6:
+            fa = frame_at(A["mp4"], o)
+            i = B["in_range"][0]
+            while i <= B["in_range"][1] + 1e-6:
+                c = join_cost(fa, frame_at(B["mp4"], i))
+                if c < best[0]:
+                    best = (c, o, i)
+                i += step
+            o += step
+        A["out"], B["in"], B["join_cost"] = best[1], best[2], round(best[0], 2)
 
 
 def loudness(path):
@@ -207,6 +270,7 @@ def main():
     ap.add_argument("--takes", default="")
     ap.add_argument("--name", default="main")
     ap.add_argument("--no-captions", action="store_true")
+    ap.add_argument("--fresh", action="store_true", help="drop cached segment renders")
     a = ap.parse_args()
     jd = a.job_dir
     job = yaml.safe_load(open(os.path.join(jd, "job.yaml")))
@@ -222,36 +286,47 @@ def main():
             else:
                 order.append(by_id[item])
     work = os.path.abspath(os.path.join(jd, "renders", "_work_" + a.name))
+    if a.fresh and os.path.isdir(work):
+        import shutil; shutil.rmtree(work)
     os.makedirs(work, exist_ok=True)
 
-    # 1-3: align, cut, clean audio per segment
-    edl, parts, gt, caps, word_times = [], [], 0.0, [], {}
+    # 1-3: align, segment, match cut frames, clean audio per segment
+    seq = []
     for t in order:
         mp4 = os.path.join(jd, "takes", f"{t['id']}.mp4")
         if not os.path.exists(mp4):
             print(f"missing {t['id']}, skipped", flush=True); continue
         toks = align(t, words_json(mp4))
-        segs = segments(t, toks, duration(mp4))
         gain = TAKE_LUFS - loudness(mp4)
-        for si, (s, e) in enumerate(segs):
-            part = os.path.join(work, f"{t['id']}_{si:02d}.mp4")
-            if not os.path.exists(part):
-                af = (f"afftdn=nf=-28:tn=1,highpass=f=85,lowpass=f=11500,equalizer=f=3000:t=q:w=1.2:g=2,"
-                      f"volume={gain:.2f}dB,afade=t=in:d=0.012,afade=t=out:st={e - s - 0.015:.3f}:d=0.015")
-                sh(["ffmpeg", "-y", "-ss", f"{s:.3f}", "-t", f"{e - s:.3f}", "-i", mp4,
-                    "-vf", f"scale={W}:{H},fps={FPS},format=yuv420p", "-af", af + ",aresample=48000",
-                    "-c:v", "libx264", "-preset", "fast", "-crf", "16", "-c:a", "pcm_s16le", "-ar", "48000", "-ac", "2",
-                    part.replace(".mp4", ".mov")])
-                os.rename(part.replace(".mp4", ".mov"), part)
-            pd = duration(part)
-            edl.append({"take": t["id"], "in": round(s, 3), "out": round(e, 3), "at": round(gt, 3)})
-            for k in (x for x in toks if x["p"] == si):
-                gs = gt + max(0.0, k["s"] - s)
-                ge = gt + min(pd, k["e"] - s)
-                caps.append((gs, ge, k["text"]))
-                word_times.setdefault(t["id"], []).append((norm(k["text"]), gs, ge))
-            parts.append(part); gt += pd
-        print(f"{t['id']}: {len(segs)} cuts", flush=True)
+        segs = segments(t, toks, duration(mp4))
+        for si, sg in enumerate(segs):
+            sg.update(take=t["id"], mp4=mp4, si=si, gain=gain)
+        seq += segs
+        print(f"{t['id']}: {len(segs)} segments", flush=True)
+    match_cuts(seq)
+
+    edl, parts, gt, caps, word_times = [], [], 0.0, [], {}
+    for sg in seq:
+        s, e, mp4 = sg["in"], sg["out"], sg["mp4"]
+        tag = f"{os.path.getmtime(mp4):.0f}_{s:.3f}_{e:.3f}"
+        part = os.path.join(work, f"{sg['take']}_{sg['si']:02d}_{tag}.mp4")
+        if not os.path.exists(part):
+            af = (f"afftdn=nf=-28:tn=1,highpass=f=85,lowpass=f=11500,equalizer=f=3000:t=q:w=1.2:g=2,"
+                  f"volume={sg['gain']:.2f}dB,afade=t=in:d=0.012,afade=t=out:st={e - s - 0.015:.3f}:d=0.015")
+            sh(["ffmpeg", "-y", "-ss", f"{s:.3f}", "-t", f"{e - s:.3f}", "-i", mp4,
+                "-vf", f"scale={W}:{H},fps={FPS},format=yuv420p", "-af", af + ",aresample=48000",
+                "-c:v", "libx264", "-preset", "fast", "-crf", "16", "-c:a", "pcm_s16le", "-ar", "48000", "-ac", "2",
+                part.replace(".mp4", ".mov")])
+            os.rename(part.replace(".mp4", ".mov"), part)
+        pd = duration(part)
+        edl.append({"take": sg["take"], "in": round(s, 3), "out": round(e, 3), "at": round(gt, 3),
+                    "join_cost": sg.get("join_cost")})
+        for k in sg["toks"]:
+            gs = gt + max(0.0, k["s"] - s)
+            ge = gt + min(pd, k["e"] - s)
+            caps.append((gs, ge, k["text"]))
+            word_times.setdefault(sg["take"], []).append((norm(k["text"]), gs, ge))
+        parts.append(part); gt += pd
     json.dump(edl, open(os.path.join(jd, "renders", f"{a.name}.edl.json"), "w"), indent=1)
 
     # 4: concat + room tone + master
@@ -299,7 +374,7 @@ def main():
     if cur:
         chunks.append(cur)
     cap_list = [(ch[0][0], ch[-1][1] if i == len(chunks) - 1 else max(ch[-1][1], chunks[i + 1][0][0]),
-                 caption_img(" ".join(x[2] for x in ch).strip(" ,").upper())) for i, ch in enumerate(chunks)]
+                 caption_img(re.sub(r'["“”]', "", " ".join(x[2] for x in ch)).strip(" ,").upper())) for i, ch in enumerate(chunks)]
 
     out = os.path.join(jd, "renders", f"{a.name}.mp4")
     dec = subprocess.Popen(["ffmpeg", "-v", "error", "-i", cat, "-f", "rawvideo", "-pix_fmt", "rgba", "-"], stdout=subprocess.PIPE)

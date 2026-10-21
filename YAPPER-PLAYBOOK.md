@@ -2,7 +2,7 @@
 
 > **Living document.** This is the single source of truth for how we script, generate, cut and ship AI yapper ads. Every AI agent (Claude, Grok, OpenClaw, anything else) reads this before writing a yapper script. When we learn something, it goes in here, and the change goes in the [Changelog](#14-changelog).
 >
-> **Version:** 0.3 · **Last updated:** 2026-10-21 · **Owner:** Shabir Nudrat
+> **Version:** 0.4 · **Last updated:** 2026-10-21 · **Owner:** Shabir Nudrat
 > **Origin:** v0.1 is built from the @ladprofit "AI Yapper Playbook" breakdown (fictional £1 perfume subscription, 92 s, 34 cuts, $16 total), plus our own kie.ai Omni chaining work on whiteboard and VSL ads.
 
 ---
@@ -20,7 +20,7 @@
 9. [The takes: locked prompt + chaining](#9-the-takes-locked-prompt--chaining)
 10. [Edit](#10-edit)
 11. [Sound](#11-sound)
-12. [QA checklist](#12-qa-checklist)
+12. [QA checklist](#12-qa-checklist) · [12b. The QC agent](#12b-the-qc-agent)
 13. [Production notes, costs and known failures](#13-production-notes-costs-and-known-failures)
 14. [Changelog](#14-changelog)
 - [Appendix A: How to brief an agent](#appendix-a-how-to-brief-an-agent)
@@ -209,6 +209,8 @@ The first version of the original ad used 26 one-line takes. Every one restarted
 
 - **Words:** 20-30 words, with `/` cut marks (§5).
 - **Timed beats:** 3 segments per 10 s take (0-3, 3-6, 6-10). Every pose change lands on a cut mark. Copy mannerisms from the reference video's frames where we have one.
+- **Never name an object in a beat unless it's a real prop in `props`.** Omni turns mimes into real objects: "cups hands like holding a book" put a book in his hands for two takes; "mimes scrolling a phone" will produce a phone. Describe only hand shapes and body: "both palms up close together, eyes drooping". `qc.py lint --fix` rewrites offending beats.
+- **No hand-to-face gestures** ("rubs eyes"). They melt faces.
 - **Props in hand:** track every prop. If she lifts the spray in t2, it's still in her hand at the start of t3, or t3 has a beat where she puts it down.
 - **Starts on:** `actor` (the approved actor image) or `tN last frame`. Re-anchor to `actor` every 3-4 takes so the face can't drift.
 - **Stickers:** which sticker, on which word.
@@ -434,6 +436,37 @@ Run on every ad before it ships. The pipeline automates what it can; a human che
 
 ---
 
+## 12b. The QC agent
+
+The checklist above is what a human catches by eye. The QC agent does it automatically and fixes what it finds. It runs as `python3 pipeline/qc.py <job_dir> fix` and loops:
+
+```
+lint (free) → Gemini reviews every take → regenerate bad takes → re-cut with matched cuts → Gemini reviews the finished ad → QC-REPORT.md
+```
+
+**1. Lint, before any credits are spent.** Flags beats that name objects (Omni will materialise them), hand-to-face gestures, and word counts outside §5.2. `--fix` rewrites the beats with Gemini Flash into prop-free hand shapes.
+
+**2. Take review (Gemini 3.1 Pro watches and listens).** Each take is sent with the approved actor image and a reference voice clip. Gemini returns timestamped issues in these categories: `prop`, `identity`, `outfit`, `hands`, `camera`, `text`, `voice`, `lipsync`, `delivery`, `continuity`, plus a 1-5 voice match and identity match. **Only issues inside the frames the edit actually uses count** (from the EDL), so junk in a trimmed tail costs nothing.
+
+**3. Regenerate.** A take is redone when it has a high-severity issue in used frames, or a voice/identity score ≤ 2. The fix depends on the category:
+
+| Category | Fix |
+|---|---|
+| prop | Beats rewritten prop-free + "hands completely empty". If the prop is already in the opening frame (inherited from the chain), restart from the actor image. |
+| identity / outfit / voice | Restart from the actor image (drift came down the chain). |
+| hands / camera / text | Same start frame + a fixed end-state line ("hands stay below the chin…", "the phone never moves…"). |
+| delivery / lipsync / continuity | Same prompt, new roll. |
+
+Max 2 attempts per take, max 8 regenerations per run (`--max-regens`). Rejected takes are kept in `takes/_rejected/`. Takes are fixed in order, so a fixed take re-seeds the next chained take.
+
+**4. Matched cuts (in `cut.py`, every render).**
+- A pause shorter than 0.45 s is **kept, not cut**. Tiny jump cuts read as glitches.
+- At every real cut, the cutter searches up to 0.3 s on each side (never into a word) for the out-frame and in-frame whose pose matches best (hands/torso weighted), so hands don't teleport. Each join's cost is written to the EDL (`join_cost`).
+
+**5. Final review.** Gemini watches the finished ad and lists jarring moments (teleporting cuts, audio jumps, captions over the face, wrong caption words) mapped back to takes. Anything still open goes in `qc/QC-REPORT.md` for a human.
+
+**Calibration notes:** Gemini scores a take 3/5 on voice even against its own audio, so treat voice/identity scores as outlier detectors (≤ 2), not truth. Prop and glitch detection is reliable: it caught the book in both takes with correct timestamps.
+
 ## 13. Production notes, costs and known failures
 
 ### 13.1 Default stack
@@ -480,6 +513,7 @@ Run on every ad before it ships. The pipeline automates what it can; a human che
 | Version | Date | Change |
 |---|---|---|
 | 0.1 | 2026-10-21 | First version. Built from the @ladprofit AI Yapper Playbook + our kie.ai Omni chaining learnings. Archetypes, skeletons, director sheet, job file spec added. |
+| 0.4 | 2026-10-21 | QC agent (`qc.py`): lint, Gemini take review, auto-regenerate, matched cuts, final review. Rule: never name objects in beats. |
 | 0.3 | 2026-10-21 | First full pilot (18 takes). Added `pipeline/` (kie.py, takes.py, cut.py), a fixed voice line in the locked prompt, `edit_words`, cutdowns in `edit.yaml`, new known failures. |
 | 0.2 | 2026-10-21 | Removed the compliance section and AI-disclosure fine print rules. Experimentation use. |
 

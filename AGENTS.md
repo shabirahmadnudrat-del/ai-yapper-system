@@ -11,6 +11,9 @@ For any script request, output exactly what Appendix A of the playbook asks for:
 concept → six moves → director sheet (markdown) → job file (YAML) → self-QA.
 Save to `jobs/<brand>/<ad-id>/director-sheet.md` and `jobs/<brand>/<ad-id>/job.yaml`.
 
+## QC
+After generating takes, run the QC agent: `python3 pipeline/qc.py <job_dir> fix` (playbook §12b). Claude Code users can call the `yapper-qc` subagent (`.claude/agents/yapper-qc.md`); other agents follow the same steps from that file.
+
 ## Hard rules
 - Never generate or describe a real person's likeness. No celebrity names in dialogue.
 - Default video model: kie.ai `gemini-omni-video` (Omni).
