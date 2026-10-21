@@ -1,6 +1,6 @@
 # Driftly (FICTIONAL TEST BRAND)
 
-> Fictional brand for testing the yapper system end to end. Not a real company. All fine print: "AI-generated actor. Fictional brand."
+> Fictional brand for testing the yapper system end to end. Not a real company.
 
 ## Product
 **Driftly Night Mix** — a powdered bedtime drink. Magnesium glycinate + L-theanine + tart cherry, berry flavour. Stir into warm water 30-45 min before bed.

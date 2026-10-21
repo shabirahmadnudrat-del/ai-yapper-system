@@ -1,8 +1,8 @@
 # The AI Yapper Playbook
 
-> **Living document.** This is the single source of truth for how we script, generate, cut and ship AI yapper ads. Every AI agent (Claude, Grok, OpenClaw, anything else) reads this before writing a yapper script. When we learn something, it goes in here, and the change goes in the [Changelog](#15-changelog).
+> **Living document.** This is the single source of truth for how we script, generate, cut and ship AI yapper ads. Every AI agent (Claude, Grok, OpenClaw, anything else) reads this before writing a yapper script. When we learn something, it goes in here, and the change goes in the [Changelog](#14-changelog).
 >
-> **Version:** 0.1 · **Last updated:** 2026-10-21 · **Owner:** Shabir Nudrat
+> **Version:** 0.2 · **Last updated:** 2026-10-21 · **Owner:** Shabir Nudrat
 > **Origin:** v0.1 is built from the @ladprofit "AI Yapper Playbook" breakdown (fictional £1 perfume subscription, 92 s, 34 cuts, $16 total), plus our own kie.ai Omni chaining work on whiteboard and VSL ads.
 
 ---
@@ -21,9 +21,8 @@
 10. [Edit](#10-edit)
 11. [Sound](#11-sound)
 12. [QA checklist](#12-qa-checklist)
-13. [Compliance and honesty](#13-compliance-and-honesty)
-14. [Production notes, costs and known failures](#14-production-notes-costs-and-known-failures)
-15. [Changelog](#15-changelog)
+13. [Production notes, costs and known failures](#13-production-notes-costs-and-known-failures)
+14. [Changelog](#14-changelog)
 - [Appendix A: How to brief an agent](#appendix-a-how-to-brief-an-agent)
 - [Appendix B: Full worked example](#appendix-b-full-worked-example)
 
@@ -71,15 +70,15 @@ Pick one archetype per ad. The archetype decides the hook disclosure, the trigge
 
 | ID | Archetype | Disclosure hook | Typical trigger | Typical settings | Notes |
 |---|---|---|---|---|---|
-| `insider` | Employee / insider | "Employee has thoughts" / "I work here and…" | Reading reviews, a customer email, a launch | Car on lunch break, desk, warehouse | The original format. Must be a fictional brand, a real staff member with permission, or a labelled AI host (see §13). |
+| `insider` | Employee / insider | "Employee has thoughts" / "I work here and…" | Reading reviews, a customer email, a launch | Car on lunch break, desk, warehouse | The original format. |
 | `customer` | Customer story | "I've been using this for X months" | Someone asked, a before/after moment, a restock | Kitchen, bathroom, bedroom, car | Most flexible. Default for client brands. |
 | `skeptic` | Skeptic converted | "I was so sure this was a scam" | Partner bought it, they lost a bet, a friend wouldn't shut up | Couch, car, bed | Objection IS the story. Price can come earlier. |
 | `partner` | Partner / family POV | "My husband / mum / roommate…" | Watching someone else change | Kitchen, living room | Third-person proof. Great for sleep, snoring, energy. |
 | `reactor` | Reacting to comments / reviews / a viral post | "Someone commented this and I need to respond" | A comment sticker on screen | Anywhere | The comment sticker is the hook. Strong for objection-led angles. |
-| `authority` | Expert (doctor, nurse, nutritionist, trainer, pharmacist, coach) | "As a [role], this is the one thing I'd…" | Patient question, myth they see online, a study | Clinic break room, car in scrubs, home office | **Strict rules, see §13.** Real consented expert or labelled AI host with no credential claim. |
+| `authority` | Expert (doctor, nurse, nutritionist, trainer, pharmacist, coach) | "As a [role], this is the one thing I'd…" | Patient question, myth they see online, a study | Clinic break room, car in scrubs, home office | Highest trust lift. Give them a specific role and setting. |
 | `day-in-life` | Routine yapper | "Get ready with me / my night routine" | Doing the routine on camera | Bathroom mirror, vanity, kitchen | Product is used on camera as a silent beat. |
 
-**Choosing:** match the archetype to the angle's core fear. If the fear is "it's a scam" → `skeptic` or `reactor`. If the fear is "it won't work for me" → `customer` or `partner`. If the fear is "is it safe / is it legit" → `authority` (within §13) or `insider`.
+**Choosing:** match the archetype to the angle's core fear. If the fear is "it's a scam" → `skeptic` or `reactor`. If the fear is "it won't work for me" → `customer` or `partner`. If the fear is "is it safe / is it legit" → `authority` or `insider`.
 
 ---
 
@@ -125,8 +124,7 @@ Only the beats that change are listed. Everything else follows the master skelet
 - 0-4 s: Role + the myth/question. "I'm a nurse and I need to stop you buying the wrong thing."
 - 4-27 s: The myth, why it's wrong, in plain words. No jargon soup.
 - 27-48 s: Mechanism, the "what I actually tell people" beat.
-- Product is introduced as "what I'd look for" → "this is the one that ticks those boxes", never as "doctor-endorsed" unless it is.
-- See §13 before writing a single line.
+- Product is introduced as "what I'd look for" → "this is the one that ticks those boxes".
 
 **`day-in-life`**
 - Product use is a silent action beat (no line spoken during it).
@@ -174,7 +172,7 @@ Stickers are written in the script, not added as an afterthought. Each one is ti
 | Price | The offer | Appears on the word where the price is spoken. |
 | Perk | Each offer element | One sticker per perk, on its word. |
 | Hook text | First 2-3 s | The big number or claim. Captions hide under it while it's up. |
-| Fine print | Bottom of frame, last ~10 s or full length | "AI-generated actor." + offer terms (+ "Fictional brand." if fictional). |
+| Fine print | Bottom of frame, last ~10 s or full length | Offer terms. |
 
 ### 5.6 Hard bans in dialogue
 
@@ -241,7 +239,7 @@ aspect_ratio: "9:16"
 model:
   video: gemini-omni-video       # kie.ai default (Omni)
   resolution: 1080p
-  take_duration_s: 8             # 8 or 10, see §14
+  take_duration_s: 8             # 8 or 10, see §13
   image: nano-banana-pro         # actor edits
 
 actor:
@@ -279,7 +277,7 @@ takes:
     props_end: [spray]
     starts_on: t1_last
 
-fine_print: "AI-generated actor. Fictional brand. £1 first month, then £14/mo. Cancel anytime."
+fine_print: "£1 first month, then £14/mo. Cancel anytime."
 ```
 
 **Validation rules (pipeline enforces):**
@@ -287,7 +285,6 @@ fine_print: "AI-generated actor. Fictional brand. £1 first month, then £14/mo.
 - Every take that isn't `t1` starts on the previous take's last frame or on `actor`.
 - No more than 3 consecutive chained takes before a re-anchor to `actor`.
 - `props_start` of take N equals `props_end` of take N-1.
-- `fine_print` contains "AI-generated".
 - No banned words (§5.6) in `words`.
 
 ---
@@ -374,7 +371,7 @@ One take, no jump cuts. No captions or on-screen text.
 - **Lip sync at all times.** No B-roll over the voice. Product actions are silent beats between lines.
 - **Stickers do the selling on mute.** Review card, comment reply, price, each perk, each on its word.
 - **Captions in the lower third.** Never over the face. Hide under hook text while it's up.
-- **Fine print at the bottom:** "AI-generated actor." + offer terms (+ "Fictional brand." when it is).
+- **Fine print at the bottom:** offer terms.
 
 ### 10.2 Cutting
 
@@ -417,7 +414,6 @@ Run on every ad before it ships. The pipeline automates what it can; a human che
 - [ ] Words per take within §5.2
 - [ ] No banned words (§5.6)
 - [ ] Claims match the brand's approved claims
-- [ ] Archetype rules in §13 respected
 
 **Takes (after generation)**
 - [ ] Every take says its full line, and nothing extra (cut filler)
@@ -436,47 +432,9 @@ Run on every ad before it ships. The pipeline automates what it can; a human che
 
 ---
 
-## 13. Compliance and honesty
+## 13. Production notes, costs and known failures
 
-**Non-negotiable. Read before writing any `insider` or `authority` script.**
-
-### 13.1 Core rule
-
-An AI actor **cannot pose as a real brand's real employee, real customer, or real expert.** Pick one:
-
-1. **Fictional brand** (tests, demos, internal R&D).
-2. **Real person with permission:** a real staff member, customer or expert who consents to their likeness and/or story being used. Their story, their words approved.
-3. **Clearly labelled AI host:** the fine print says "AI-generated actor" and the character makes **no claim to a real identity, job or credential** they don't have.
-
-**Never generate a real person's likeness.** Never a lookalike of the source-frame creator. Never a celebrity.
-
-### 13.2 By archetype
-
-| Archetype | Allowed for real client brands when… |
-|---|---|
-| `insider` | The story is a real staff member's (with permission), or the host is a labelled AI host who does **not** say "I work here". Otherwise fictional brands only. |
-| `customer` | The story, results and timeframes come from real reviews/testimonials (VoC), are typical, and fine print says "AI-generated actor. Dramatization of real customer feedback." |
-| `skeptic` / `partner` / `reactor` / `day-in-life` | Same as `customer`. |
-| `authority` | **Option A:** a real licensed expert who consents, approves the script, and whose likeness/voice we have rights to. **Option B:** a labelled AI host with **no credential claim**: no "as a doctor", no white coat + stethoscope implying one, no "Dr." name. They can say "here's what to look for on a label" as a knowledgeable person. |
-
-### 13.3 Health, supplement and medical brands
-
-- Only claims from the brand's approved claims list. No disease claims (treat, cure, prevent).
-- Results must be typical and sourced; timeframes as approved.
-- Meta and FTC rules on endorsements apply: an AI actor delivering a testimonial is a dramatization and must be disclosed as such.
-- When unsure, escalate to Shabir before generating. Generation costs money; a takedown costs the ad account.
-
-### 13.4 Fine print templates
-
-- Fictional: `AI-generated actor. Fictional brand. [offer terms]`
-- Real brand, dramatized VoC: `AI-generated actor. Dramatization based on real customer reviews. Results vary. [offer terms]`
-- Real brand, AI host: `AI-generated host. [offer terms]`
-
----
-
-## 14. Production notes, costs and known failures
-
-### 14.1 Default stack
+### 13.1 Default stack
 
 | Step | Default | Notes |
 |---|---|---|
@@ -487,13 +445,13 @@ An AI actor **cannot pose as a real brand's real employee, real customer, or rea
 | Edit | Rough cut auto → human trim → auto render | FCPXML handoff. |
 | Fallbacks | Google Flow (Veo), Higgsfield | Flow: ~45 credits for a 30 s / 3-take pilot (~$0.90 on Pro). |
 
-### 14.2 Cost benchmarks
+### 13.2 Cost benchmarks
 
 - Original ad: **$16** for a 92 s ad, all in, including every rejected attempt (Omni on kie at 1080p, actor images, test voices).
 - Our Omni runs: ~105-250 kie credits per 8 s clip.
 - Rough cut: ~2 min once takes exist.
 
-### 14.3 Known failures (add to this list every time)
+### 13.3 Known failures (add to this list every time)
 
 | Failure | Cause | Fix |
 |---|---|---|
@@ -510,11 +468,12 @@ An AI actor **cannot pose as a real brand's real employee, real customer, or rea
 
 ---
 
-## 15. Changelog
+## 14. Changelog
 
 | Version | Date | Change |
 |---|---|---|
-| 0.1 | 2026-10-21 | First version. Built from the @ladprofit AI Yapper Playbook + our kie.ai Omni chaining learnings. Archetypes, skeletons, director sheet, job file spec, compliance rules added. |
+| 0.1 | 2026-10-21 | First version. Built from the @ladprofit AI Yapper Playbook + our kie.ai Omni chaining learnings. Archetypes, skeletons, director sheet, job file spec added. |
+| 0.2 | 2026-10-21 | Removed the compliance section and AI-disclosure fine print rules. Experimentation use. |
 
 ---
 
@@ -542,7 +501,7 @@ Output, in this order:
 5. Self-QA: the "Script" section of the §12 checklist, ticked or flagged.
 ```
 
-**What good output looks like:** every take is within word limits, every `/` sits at a natural breath, every take has 3 timed beats with one personality beat, props and starts_on are tracked, stickers are tied to words, and the fine print is right for the archetype.
+**What good output looks like:** every take is within word limits, every `/` sits at a natural breath, every take has 3 timed beats with one personality beat, props and starts_on are tracked, stickers are tied to words, and the fine print carries the offer terms.
 
 ---
 
@@ -564,4 +523,4 @@ Illustrative rebuild of the original ad's structure (fictional brand `velvet-via
 | t8 | 10 s | This is exactly why we did the one pound thing. / First month is one pound. / You get a travel spray / of whatever just landed. / Then it's fourteen a month. | 0-3 points at camera · 3-6 holds up one finger · 6-10 small happy bounce | — | t7 last | Price "£1 first month" · Perk "Travel spray" |
 | t9 | 10 s | For full transparency, / I work here. / And I'm still on it. / Not an eighty pound bottle you're not sure about. / One pound. / Go. Try it. / Love ya, bye. | 0-3 hand up, honest face · 3-6 shakes head, smirks · 6-10 waves, reaches to stop recording | — | actor (re-anchor) | Fine print |
 
-**Fine print:** `AI-generated actor. Fictional brand. £1 first month, then £14/mo. Cancel anytime in the app.`
+**Fine print:** `£1 first month, then £14/mo. Cancel anytime in the app.`

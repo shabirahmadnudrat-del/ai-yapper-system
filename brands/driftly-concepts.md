@@ -10,7 +10,7 @@ Fictional brand, so every archetype is allowed incl. `insider`. One concept per 
 | DR-PAR-001 | partner | Hallway / landing, whispering, night | "My wife doesn't know I'm filming this, but she's asleep. At ten. TEN." | She used to be up till 2 scrolling | It won't do anything / another thing she'll stop using | Sleeping pills hangover | 45 s |
 | DR-REA-001 | reactor | Car or couch, comment sticker first | Sticker: "@jen.m.k anything with magnesium is a scam lol" → "Jen. Babe. Sit down." | A comment on her last video | Supplements are a scam + groggy fear | Melatonin hangover | 60 s |
 | DR-DIL-001 | day-in-life | Bathroom mirror, night routine | "Night routine but it's the boring version that actually works." | GRWM-style routine | Another thing I'll stop using (it's one step) | 9-step skincare she never finishes | 45 s |
-| DR-AUT-001 | authority (labelled AI host, no credential) | Home office, bookshelf | "Before you buy another sleep supplement, read the back of the tub. Here's what I look for." | The viewer is about to waste money | Grogginess / what's actually in it | Melatonin gummies | 60 s |
+| DR-AUT-001 | authority | Home office, bookshelf | "Before you buy another sleep supplement, read the back of the tub. Here's what I look for." | The viewer is about to waste money | Grogginess / what's actually in it | Melatonin gummies | 60 s |
 
 ## Pilot recommendation
 Build **DR-INS-001** first (closest to the PDF's proven format, so it tests the pipeline, not the creative). Then **DR-REA-001** and **DR-CUS-001** as the first archetype test.

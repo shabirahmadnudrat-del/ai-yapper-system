@@ -12,10 +12,9 @@ concept → six moves → director sheet (markdown) → job file (YAML) → self
 Save to `jobs/<brand>/<ad-id>/director-sheet.md` and `jobs/<brand>/<ad-id>/job.yaml`.
 
 ## Hard rules
-- Follow §13 (compliance) of the playbook. Never write an AI actor as a real person, real employee or real credentialed expert of a real brand.
 - Never generate or describe a real person's likeness. No celebrity names in dialogue.
 - Default video model: kie.ai `gemini-omni-video` (Omni).
-- Don't change the playbook's rules silently. If you learn something, add it to the right section and log it in §15 Changelog.
+- Don't change the playbook's rules silently. If you learn something, add it to the right section and log it in §14 Changelog.
 
 ## Repo map
 - `YAPPER-PLAYBOOK.md` — the method
