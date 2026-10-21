@@ -465,6 +465,8 @@ Max 2 attempts per take, max 8 regenerations per run (`--max-regens`). Rejected 
 
 **5. Final review.** Gemini watches the finished ad and lists jarring moments (teleporting cuts, audio jumps, captions over the face, wrong caption words) mapped back to takes. Anything still open goes in `qc/QC-REPORT.md` for a human.
 
+**Cut density trade-off (pilot finding):** Omni talks almost without pauses, so with the 0.45 s merge rule a take usually ends up with **no internal cuts**: the IM8 pilot went from 66 segments (v1, glitchy) to 18 (one per take, a cut every ~7 s). That fixes the teleporting hands but loses the 2-3 s jump-cut rhythm. To get both, write the pauses in: put a real beat in the timed beats at each `/` ("stops, exhales, small head shake") so there is a gap worth cutting. Lower `MERGE_GAP` in `cut.py` for more cuts.
+
 **Calibration notes:** Gemini scores a take 3/5 on voice even against its own audio, so treat voice/identity scores as outlier detectors (≤ 2), not truth. Prop and glitch detection is reliable: it caught the book in both takes with correct timestamps.
 
 ## 13. Production notes, costs and known failures
@@ -484,6 +486,7 @@ Max 2 attempts per take, max 8 regenerations per run (`--max-regens`). Rejected 
 
 - Original ad: **$16** for a 92 s ad, all in, including every rejected attempt (Omni on kie at 1080p, actor images, test voices).
 - Our Omni runs: ~105-250 kie credits per 8 s clip.
+- QC pass on the same pilot: 7 regenerations (book ×2, out-of-order line, ring appearing, deformed hands), ~1,180 credits, ~35 min.
 - IM8 driveway-dad pilot (2026-10-21): 18 × 8 s takes, 1080p, zero failures, ~3,700 kie credits all in. All 18 said their line; 2 needed an `edit_words` fix. Wall-clock ~45 min with 5 chains in parallel.
 - Rough cut: ~2 min once takes exist.
 
@@ -503,6 +506,7 @@ Max 2 attempts per take, max 8 regenerations per run (`--max-regens`). Rejected 
 | Omni reorders or garbles a phrase (e.g. "the next night, etrial night") | Model drift inside a take | Don't regenerate a chained take for this: set `edit_words` on the take to what was actually said that you keep; the cutter drops the rest |
 | Omni adds a few words mid-take ("I just had to prove her wrong") | Model improv | Keep it if it reads naturally: add it to `edit_words` |
 | Long caption chunk runs off screen | One long word group | `cut.py` shrinks the caption font to fit |
+| Clipped word at a hyphen ("eye-roll", "pre-workout") | Whisper splits hyphenated words, alignment missed them | Fixed in `cut.py`: matching runs on hyphen-split sub-words |
 | Sticker covers the face | Card placed in the upper third | Badges at `pos: top` (above the head); product cards at chest height with `hide_captions: true` |
 | Regenerating a chain's tail broke good takes | Downstream takes depend on the changed frame | Only rerun when the defect is load-bearing; back up first; re-anchor to actor |
 

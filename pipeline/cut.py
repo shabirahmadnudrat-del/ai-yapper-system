@@ -58,13 +58,21 @@ def align(take, hyp):
     for pi, phrase in enumerate(take.get("edit_words", take["words"]).split("/")):
         for w in phrase.split():
             toks.append({"text": w, "p": pi})
-    a = [norm(t["text"]) for t in toks]
-    b = [norm(h["w"]) for h in hyp]
-    sm = difflib.SequenceMatcher(a=a, b=b, autojunk=False)
+    # match on hyphen-split sub-words: whisper hears "eye-roll" as "eye roll", "pre-workout" as "pre -workout"
+    sub, owner = [], []
+    for i, t in enumerate(toks):
+        for p in filter(None, (norm(x) for x in re.split(r"[-–]", t["text"]))):
+            sub.append(p); owner.append(i)
+    hs, hown = [], []
+    for j, h in enumerate(hyp):
+        for p in filter(None, (norm(x) for x in re.split(r"[-–]", h["w"]))):
+            hs.append(p); hown.append(j)
+    sm = difflib.SequenceMatcher(a=sub, b=hs, autojunk=False)
     for blk in sm.get_matching_blocks():
         for k in range(blk.size):
-            toks[blk.a + k]["s"] = hyp[blk.b + k]["s"]
-            toks[blk.a + k]["e"] = hyp[blk.b + k]["e"]
+            t, h = toks[owner[blk.a + k]], hyp[hown[blk.b + k]]
+            t["s"] = min(t.get("s", h["s"]), h["s"])
+            t["e"] = max(t.get("e", h["e"]), h["e"])
     # fuzzy-fill unmatched tokens from the next unused hypothesis word, else interpolate
     known = [i for i, t in enumerate(toks) if "s" in t]
     if not known:
