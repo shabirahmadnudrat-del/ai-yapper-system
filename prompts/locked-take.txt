@@ -1,0 +1,8 @@
+Static, locked-off shot, no camera movement. {SETTING_PROMPT}.
+{PRONOUN} stays seated, mouth moving naturally, direct eye contact, the camera never moves.
+In this take: {TIMED_BEATS}.
+{PRONOUN} says: "{WORDS_NO_CUT_MARKS}"
+{ENERGY}.
+A very animated face: eyebrows up and down, glances to the window and back.
+Both hands gesture at chest height. {POSSESSIVE} hands never touch {POSSESSIVE_LOWER} face.
+One take, no jump cuts. No captions or on-screen text.

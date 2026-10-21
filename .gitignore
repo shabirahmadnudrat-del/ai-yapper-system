@@ -1,0 +1,8 @@
+.env
+*.env
+__pycache__/
+.DS_Store
+jobs/**/takes/
+jobs/**/renders/
+jobs/**/*.mp4
+jobs/**/*.wav
